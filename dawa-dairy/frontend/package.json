@@ -1,0 +1,10 @@
+{
+  "name": "dawa-dairy-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static frontend for the Dawa Dairy — no build step, no dependencies.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  }
+}
