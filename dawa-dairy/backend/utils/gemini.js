@@ -19,11 +19,11 @@ const SYSTEM_PROMPT = `You are a careful transcription assistant reading a photo
   "raw_notes": "anything unclear or hard to read, in plain English"
 }`;
 
-// List of fallback models to try in order
+// List of active models to try in order
 const FALLBACK_MODELS = [
   process.env.GEMINI_MODEL,
   'gemini-2.5-flash',
-  'gemini-1.5-flash'
+  'gemini-2.0-flash'
 ].filter(Boolean);
 
 async function extractPrescription(base64, mediaType) {
@@ -33,7 +33,7 @@ async function extractPrescription(base64, mediaType) {
 
   let lastError = null;
 
-  // Loop through models until one succeeds
+  // Loop through fallback models until one succeeds
   for (const modelName of FALLBACK_MODELS) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
