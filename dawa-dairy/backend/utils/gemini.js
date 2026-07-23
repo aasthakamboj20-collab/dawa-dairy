@@ -19,7 +19,7 @@ const SYSTEM_PROMPT = `You are a careful transcription assistant reading a photo
   "raw_notes": "anything unclear or hard to read, in plain English"
 }`;
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 async function extractPrescription(base64, mediaType) {
   if (!process.env.GEMINI_API_KEY) {
