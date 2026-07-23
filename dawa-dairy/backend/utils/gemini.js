@@ -19,63 +19,71 @@ const SYSTEM_PROMPT = `You are a careful transcription assistant reading a photo
   "raw_notes": "anything unclear or hard to read, in plain English"
 }`;
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+// List of fallback models to try in order
+const FALLBACK_MODELS = [
+  process.env.GEMINI_MODEL,
+  'gemini-2.5-flash',
+  'gemini-1.5-flash'
+].filter(Boolean);
 
 async function extractPrescription(base64, mediaType) {
   if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set on the server. Add it to backend/.env');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  let lastError = null;
 
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { inline_data: { mime_type: mediaType, data: base64 } },
-            { text: 'Transcribe this prescription. Return only the JSON object described in your instructions.' },
-          ],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.1,
-      },
-    }),
-  });
+  // Loop through models until one succeeds
+  for (const modelName of FALLBACK_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-  if (!resp.ok) {
-    const errBody = await resp.json().catch(() => ({}));
-    const msg = errBody?.error?.message || `Gemini API error (${resp.status})`;
-    throw new Error(msg);
-  }
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: SYSTEM_PROMPT }]
+          },
+          contents: [{
+            role: 'user',
+            parts: [
+              { inline_data: { mime_type: mediaType, data: base64 } },
+              { text: 'Transcribe this prescription. Return only the JSON object described in your instructions.' }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.1
+          }
+        })
+      });
 
-  const data = await resp.json();
-  const candidate = data.candidates && data.candidates[0];
-  const textPart = candidate?.content?.parts?.find((p) => typeof p.text === 'string');
+      if (!resp.ok) {
+        const errBody = await resp.json().catch(() => ({}));
+        throw new Error(errBody?.error?.message || `API error (${resp.status})`);
+      }
 
-  if (!textPart) {
-    if (candidate?.finishReason && candidate.finishReason !== 'STOP') {
-      throw new Error(`Gemini stopped early (${candidate.finishReason}). Try a clearer photo.`);
+      const data = await resp.json();
+      const candidate = data.candidates && data.candidates[0];
+      const textPart = candidate?.content?.parts?.find(p => typeof p.text === 'string');
+
+      if (!textPart) {
+        throw new Error('No text response from Gemini.');
+      }
+
+      let clean = textPart.text.trim();
+      clean = clean.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+      return JSON.parse(clean);
+
+    } catch (err) {
+      lastError = err;
+      console.warn(`Model ${modelName} failed: ${err.message}. Trying next fallback...`);
     }
-    throw new Error('No text response from Gemini.');
   }
 
-  let clean = textPart.text.trim();
-  clean = clean.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-  try {
-    return JSON.parse(clean);
-  } catch (e) {
-    throw new Error('Could not parse the Gemini response as JSON.');
-  }
+  throw new Error(`AI Extraction Failed: ${lastError?.message || 'All models failed.'}`);
 }
 
 module.exports = { extractPrescription };
