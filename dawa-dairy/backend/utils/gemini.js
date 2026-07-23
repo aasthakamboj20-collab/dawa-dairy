@@ -19,11 +19,13 @@ const SYSTEM_PROMPT = `You are a careful transcription assistant reading a photo
   "raw_notes": "anything unclear or hard to read, in plain English"
 }`;
 
-// List of active models to try in order
+// Models compatible with unbilled free-tier Google AI Studio projects
 const FALLBACK_MODELS = [
   process.env.GEMINI_MODEL,
-  'gemini-2.5-flash',
-  'gemini-2.0-flash'
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
+].filter(Boolean);
 ].filter(Boolean);
 
 async function extractPrescription(base64, mediaType) {
