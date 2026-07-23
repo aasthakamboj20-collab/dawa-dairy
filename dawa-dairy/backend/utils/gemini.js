@@ -19,7 +19,7 @@ const SYSTEM_PROMPT = `You are a careful transcription assistant reading a photo
   "raw_notes": "anything unclear or hard to read, in plain English"
 }`;
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 async function extractPrescription(base64, mediaType) {
   if (!process.env.GEMINI_API_KEY) {
@@ -69,7 +69,7 @@ async function extractPrescription(base64, mediaType) {
   }
 
   let clean = textPart.text.trim();
-  clean = clean.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '').trim();
+  clean = clean.replace(/```json/gi, '').replace(/```/g, '').trim();
 
   try {
     return JSON.parse(clean);
