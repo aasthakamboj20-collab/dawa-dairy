@@ -27,7 +27,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`Dawa Dairy API running on http://localhost:${PORT}`);
+  console.log(`Dawa Dairy API running on port ${PORT}`);
+});
   if (!process.env.GEMINI_API_KEY) {
     console.warn('WARNING: GEMINI_API_KEY is not set — prescription extraction will fail until you add it to backend/.env');
   }
