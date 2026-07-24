@@ -26,13 +26,14 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 10000;
+
+if (!process.env.GEMINI_API_KEY) {
+  console.warn('WARNING: GEMINI_API_KEY is not set – prescription extraction will fail');
+}
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'replace_this_with_a_long_random_string') {
+  console.warn('WARNING: Set a real JWT_SECRET in backend/.env before deploying.');
+}
+
 app.listen(PORT, () => {
   console.log(`Dawa Dairy API running on port ${PORT}`);
-});
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn('WARNING: GEMINI_API_KEY is not set — prescription extraction will fail until you add it to backend/.env');
-  }
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'replace_this_with_a_long_random_string') {
-    console.warn('WARNING: Set a real JWT_SECRET in backend/.env before deploying.');
-  }
 });
