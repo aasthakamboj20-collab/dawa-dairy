@@ -25,7 +25,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong on the server.' });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Dawa Dairy API running on http://localhost:${PORT}`);
   if (!process.env.GEMINI_API_KEY) {
